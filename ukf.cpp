@@ -49,6 +49,9 @@ void UKF::GenerateSigmaPoints(MatrixXd* Xsig_out) {
   //calculate square root of P
   MatrixXd A = P.llt().matrixL();
 
+  // Calculate vector(?)
+  MatrixXd term = sqrt(lambda + n_x) * A;
+
 /*******************************************************************************
  * Student part begin
  ******************************************************************************/
@@ -57,6 +60,19 @@ void UKF::GenerateSigmaPoints(MatrixXd* Xsig_out) {
   
   //calculate sigma points ...
   //set sigma points as columns of matrix Xsig
+
+  // Sigma point 1
+  Xsig.col(0) = x;
+  Xsig.col(1) = x + term.col(0);
+  Xsig.col(2) = x + term.col(1);
+  Xsig.col(3) = x + term.col(2);
+  Xsig.col(4) = x + term.col(3);
+  Xsig.col(5) = x + term.col(4);
+  Xsig.col(6) = x - term.col(0);
+  Xsig.col(7) = x - term.col(1);
+  Xsig.col(8) = x - term.col(2);
+  Xsig.col(9) = x - term.col(3);
+  Xsig.col(10) = x - term.col(4);
 
 /*******************************************************************************
  * Student part end
