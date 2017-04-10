@@ -34,6 +34,7 @@ public:
   void PredictMeanAndCovariance(VectorXd* x_pred, MatrixXd* P_pred);
   void PredictRadarMeasurement(VectorXd* z_out, MatrixXd* S_out);
   void UpdateState(VectorXd* x_out, MatrixXd* P_out);
+  void PredictionFunction(VectorXd* x, VectorXd* x_pred, double dt);
 
 };
 

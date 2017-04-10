@@ -174,6 +174,43 @@ void UKF::AugmentedSigmaPoints(MatrixXd* Xsig_out) {
 
 }
 
+void UKF::PredictionFunction(VectorXd* x, VectorXd* x_pred, double dt) {
+  /*
+   * x_pred = f(x, dt)
+   * Effect of process noise on position is approximated as a linear 
+   * superposition (this holds well as long as yaw rate acceleation is not 
+   * significant) 
+   */
+
+  double px = (*x)(0);
+  double py = (*x)(1);
+  double v = (*x)(2);
+  double psi = (*x)(3);
+  double psi_dot = (*x)(4);
+
+  double vpd = v/psi_dot;
+  double ppd = psi + psi_dot * dt;
+  double sp = sin(psi);
+  double cp = cos(psi);
+  double dt2 = dt * dt;
+
+  double nu_accel = 0;
+  double nu_psi_dot = 0;
+
+  px = px + vpd * (sin(ppd) - sp) + 0.5 * dt2 * cp * nu_accel;
+  py = py + vpd * (-cos(ppd) + cp) + 0.5 * dt2 * sp * nu_accel;
+  v = v + dt * nu_accel;
+  psi = psi + psi_dot * dt + 0.5 * dt2 * nu_psi_dot;
+  psi_dot = psi_dot + dt * nu_psi_dot;
+
+  (*x_pred)(0) = px;
+  (*x_pred)(1) = py;
+  (*x_pred)(2) = v;
+  (*x_pred)(3) = psi;
+  (*x_pred)(4) = psi_dot;
+
+}
+
 void UKF::SigmaPointPrediction(MatrixXd* Xsig_out) {
 
   //set state dimension
@@ -202,7 +239,10 @@ void UKF::SigmaPointPrediction(MatrixXd* Xsig_out) {
   ******************************************************************************/
 
   //predict sigma points
+  
+
   //avoid division by zero
+
   //write predicted sigma points into right column
   
 
@@ -217,3 +257,4 @@ void UKF::SigmaPointPrediction(MatrixXd* Xsig_out) {
   *Xsig_out = Xsig_pred;
 
 }
+
