@@ -69,6 +69,7 @@ void UKF::AugmentedSigmaPoints(MatrixXd* Xsig_out) {
   x_aug.head(5) = x;
 
   //create augmented covariance matrix
+  P_aug.fill(0.0);
   P_aug.topLeftCorner(5, 5) = P;
   P_aug.bottomRightCorner(2, 2) << std_a * std_a, 0, 0, std_yawdd * std_yawdd;
 
