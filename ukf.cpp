@@ -187,6 +187,8 @@ void UKF::PredictionFunction(VectorXd* x, VectorXd* x_pred, double dt) {
   double v = (*x)(2);
   double psi = (*x)(3);
   double psi_dot = (*x)(4);
+  double nu_accel = (*x)(5);
+  double nu_yaw_accel = (*x)(6);
 
   double vpd = v/psi_dot;
   double ppd = psi + psi_dot * dt;
@@ -194,14 +196,22 @@ void UKF::PredictionFunction(VectorXd* x, VectorXd* x_pred, double dt) {
   double cp = cos(psi);
   double dt2 = dt * dt;
 
-  double nu_accel = 0;
-  double nu_psi_dot = 0;
-
-  px = px + vpd * (sin(ppd) - sp) + 0.5 * dt2 * cp * nu_accel;
-  py = py + vpd * (-cos(ppd) + cp) + 0.5 * dt2 * sp * nu_accel;
-  v = v + dt * nu_accel;
-  psi = psi + psi_dot * dt + 0.5 * dt2 * nu_psi_dot;
-  psi_dot = psi_dot + dt * nu_psi_dot;
+  if (psi_dot > 0.001) 
+  {
+    px = px + vpd * (sin(ppd) - sp) + 0.5 * dt2 * cp * nu_accel;
+    py = py + vpd * (-cos(ppd) + cp) + 0.5 * dt2 * sp * nu_accel;
+    v = v + dt * nu_accel;
+    psi = psi + psi_dot * dt + 0.5 * dt2 * nu_yaw_accel;
+    psi_dot = psi_dot + dt * nu_yaw_accel;
+  }
+  else
+  {
+    px = px + v * cp * dt + 0.5 * dt2 * cp * nu_accel;
+    py = py + v * sp * dt + 0.5 * dt2 * sp * nu_accel;
+    v = v + dt * nu_accel;
+    psi = psi + 0.5 * dt2 * nu_yaw_accel;
+    psi_dot = psi_dot + dt * nu_yaw_accel;
+  }
 
   (*x_pred)(0) = px;
   (*x_pred)(1) = py;
@@ -239,7 +249,13 @@ void UKF::SigmaPointPrediction(MatrixXd* Xsig_out) {
   ******************************************************************************/
 
   //predict sigma points
-  
+  for (int i = 0; i < 15; i++) 
+  {
+    VectorXd x_ = Xsig_aug.col(i);
+    VectorXd x_pred_ = Xsig_pred.col(i);
+    PredictionFunction(&x_, &x_pred_, delta_t);
+    Xsig_pred.col(i) = x_pred_;
+  };
 
   //avoid division by zero
 
