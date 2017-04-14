@@ -1,0 +1,7 @@
+{
+    "version": "0.1.0",
+    "command": "g++",
+    "isShellCommand": true,
+    "args": ["-g", "-o", "ukf", "main.cpp", "ukf.cpp"],
+    "showOutput": "always"
+}
