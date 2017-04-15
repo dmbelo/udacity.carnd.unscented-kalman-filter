@@ -33,7 +33,7 @@ void UKF::Initialize() {
 
 }
 
-void UKF::ProcessMeasurement(double dt) {
+void UKF::ProcessMeasurement(MeasurementPackage measurement) {
 
     // Calculate timestep
     // dt = ...
@@ -44,7 +44,7 @@ void UKF::ProcessMeasurement(double dt) {
 
     // Predict sigma points
     // xs - state sigma points [5x15] at k+1
-    PredictSigmaPoints(dt);
+    PredictSigmaPoints(0);
 
     // Predict mean/covariance of predicted state
     // x - predicted state mean vector [5x1]

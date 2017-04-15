@@ -1,9 +1,10 @@
 #ifndef UKF_H
 #define UKF_H
 
-#include "Eigen/Dense"
 #include <vector>
 #include <iostream>
+#include "Eigen/Dense"
+#include "measurement_package.h"
 
 using namespace std;
 using namespace Eigen;
@@ -25,7 +26,7 @@ public:
 	UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_); // Construcor
 	virtual ~UKF(); // Destructor
 	void Initialize();
-  void ProcessMeasurement(double dt);
+  void ProcessMeasurement(MeasurementPackage measurement);
   void GenerateAugmentedSigmaPoints();
   void PredictSigmaPoints(double dt);
   void PredictStateMeanAndCovariance();
