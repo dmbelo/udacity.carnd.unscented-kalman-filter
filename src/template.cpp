@@ -13,6 +13,7 @@ void UKF::Initialize() {
     x = VectorXd::Zero(NX);
     P = MatrixXd::Zero(NX, NX);
     xa = VectorXd::Zero(NA);
+    xs = VectorXd::Zero(NX, 2 * NA + 1);
     xsa = MatrixXd::Zero(NA, 2 * NA + 1);
     Pa = MatrixXd::Zero(NA, NA);
     A = MatrixXd::Zero(NA, NA);
@@ -56,6 +57,19 @@ void UKF::ProcessMeasurement() {
 
     return 0;
 
+
+}
+
+void UKF::PredictSigmaPoints() {
+
+    for (int i = 0; i < NA; i++) 
+    {
+        VectorXd x_ = xsa.col(i);
+        VectorXd x_pred_ = xs.col(i);
+        Block<MatrixXd, Dynamic, 1, true> part_row = (*a).col(1);
+        CTRVProcessModel(&x_, &x_pred_, dt);
+        Xsig_pred.col(i) = x_pred_;
+    };
 
 }
 

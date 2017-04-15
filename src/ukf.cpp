@@ -132,20 +132,20 @@ void UKF::AugmentedSigmaPoints(MatrixXd* Xsig_out) {
   MatrixXd A = sqrt(lambda + n_aug) * P_aug.llt().matrixL();
 
   Xsig_aug.col(0) = x_aug;
-  Xsig_aug.col(1) = x_aug + tmp.col(0);
-  Xsig_aug.col(2) = x_aug + tmp.col(1);
-  Xsig_aug.col(3) = x_aug + tmp.col(2);
-  Xsig_aug.col(4) = x_aug + tmp.col(3);
-  Xsig_aug.col(5) = x_aug + tmp.col(4);
-  Xsig_aug.col(6) = x_aug + tmp.col(5);
-  Xsig_aug.col(7) = x_aug + tmp.col(6);
-  Xsig_aug.col(8) = x_aug - tmp.col(0);
-  Xsig_aug.col(9) = x_aug - tmp.col(1);
-  Xsig_aug.col(10) = x_aug - tmp.col(2);
-  Xsig_aug.col(11) = x_aug - tmp.col(3);
-  Xsig_aug.col(12) = x_aug - tmp.col(4);
-  Xsig_aug.col(13) = x_aug - tmp.col(5);
-  Xsig_aug.col(14) = x_aug - tmp.col(6);
+  Xsig_aug.col(1) = x_aug + A.col(0);
+  Xsig_aug.col(2) = x_aug + A.col(1);
+  Xsig_aug.col(3) = x_aug + A.col(2);
+  Xsig_aug.col(4) = x_aug + A.col(3);
+  Xsig_aug.col(5) = x_aug + A.col(4);
+  Xsig_aug.col(6) = x_aug + A.col(5);
+  Xsig_aug.col(7) = x_aug + A.col(6);
+  Xsig_aug.col(8) = x_aug - A.col(0);
+  Xsig_aug.col(9) = x_aug - A.col(1);
+  Xsig_aug.col(10) = x_aug - A.col(2);
+  Xsig_aug.col(11) = x_aug - A.col(3);
+  Xsig_aug.col(12) = x_aug - A.col(4);
+  Xsig_aug.col(13) = x_aug - A.col(5);
+  Xsig_aug.col(14) = x_aug - A.col(6);
 
   
   /*******************************************************************************
