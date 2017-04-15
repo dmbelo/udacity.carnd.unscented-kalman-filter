@@ -1,14 +1,28 @@
+#include "ukf.h"
+
 // Assuming only radar measurements
 
 #define NX 5 // Dimensionality of state vector
 #define NZ 3 // Dimensionality of measurement
 #define NA 7 // Dimensionality of augmented sigma point matrix
 
+UKF::UKF() {
+
+    cout << "UKF Constructor" << endl;
+
+}
+
+UKF::~UKF() {
+
+    cout << "UKF Destructor" << endl;
+
+}
+
 void UKF::Initialize() {
 
-    lambda = NX - 3; // Spreading parameters for augmentation 
-    sigma_v_dot = 0.2; // Process noise standard deviation long. accel
-    sigma_psi_dot2 = 0.2; // Process noise standard deviation yaw accel 
+    lambda = 3 - NX;
+    sigma_v_dot = 0.2; 
+    sigma_psi_dot2 = 0.2;
 
     x = VectorXd::Zero(NX);
     P = MatrixXd::Zero(NX, NX);
@@ -20,18 +34,18 @@ void UKF::Initialize() {
 
 }
 
-void UKF::ProcessMeasurement() {
+void UKF::ProcessMeasurement(double dt) {
 
     // Calculate timestep
     // dt = ...
 
     // Generate sigma 
     // xsa - augmented state sigma points [7x15] at k
-    GenerateAugmentedSigmaPoints(xsa);
+    GenerateAugmentedSigmaPoints();
 
     // Predict sigma points
     // xs - state sigma points [5x15] at k+1
-    PredictSigmaPoints(xsa, xs);
+    PredictSigmaPoints(dt);
 
     // Predict mean/covariance of predicted state
     // x - predicted state mean vector [5x1]
@@ -55,33 +69,18 @@ void UKF::ProcessMeasurement() {
     // P - updated state covariance matrix [5x5] 
     UpdateState();
 
-    return 0;
-
-
-}
-
-void UKF::PredictSigmaPoints() {
-
-    for (int i = 0; i < NA; i++) 
-    {
-        VectorXd x_ = xsa.col(i);
-        VectorXd x_pred_ = xs.col(i);
-        Block<MatrixXd, Dynamic, 1, true> part_row = (*a).col(1);
-        CTRVProcessModel(&x_, &x_pred_, dt);
-        Xsig_pred.col(i) = x_pred_;
-    };
-
 }
 
 void UKF::GenerateAugmentedSigmaPoints() {
 
-    xa.head(nx) = x;
-    Pa.topLeftCorner(nx, nx) = P;
-    Pa(5, 5) = sigma_v_dot * sigman_v_dot;
+    xa.head(NX) = x;
+    Pa.topLeftCorner(NX, NX) = P;
+    Pa(5, 5) = sigma_v_dot * sigma_v_dot;
     Pa(6, 6) = sigma_psi_dot2 * sigma_psi_dot2;
 
-    A = sqrt(lambda + n_aug) * P_aug.llt().matrixL(); //square root matrix
-    
+    A = (Pa.llt().matrixL());
+    A *= sqrt(lambda + NA); //square root matrix
+
     xsa.col(0) = xa;
     xsa.col(1) = xa + A.col(0);
     xsa.col(2) = xa + A.col(1);
@@ -97,6 +96,34 @@ void UKF::GenerateAugmentedSigmaPoints() {
     xsa.col(12) = xa - A.col(4);
     xsa.col(13) = xa - A.col(5);
     xsa.col(14) = xa - A.col(6);
+
+}
+
+void UKF::PredictSigmaPoints(double dt) {
+
+    for (int i = 0; i < NA; i++) 
+    {
+        VectorXd x_ = xsa.col(i);
+        VectorXd x_pred_ = xs.col(i);
+        CTRVProcessModel(&x_, &x_pred_, dt);
+        xs.col(i) = x_pred_;
+    };
+
+}
+
+void UKF::PredictStateMeanAndCovariance() {
+
+}
+
+void UKF::PredictMeasurement() {
+
+}
+
+void UKF::PredictMeasurementMeanAndCovariance() {
+
+}
+
+void UKF::UpdateState() {
 
 }
 
@@ -147,6 +174,11 @@ void UKF::CTRVProcessModel(VectorXd* x, VectorXd* nu, double dt) {
 
 }
 
-void UKF::RadarMeasurementModel()
 
-void UKF::LidarMeasurementModel()
+void UKF::RadarMeasurementModel() {
+
+}
+
+void UKF::LidarMeasurementModel() {
+
+}
