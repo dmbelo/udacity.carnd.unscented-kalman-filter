@@ -11,7 +11,8 @@ using std::vector;
 int main() {
 
 	//Create a UKF instance
-	UKF ukf;
+	UKF ukf(5, 0.2, 0.2);
+	cout << ukf.lambda << endl;
 
 /*******************************************************************************
 * Programming assignment calls

@@ -6,9 +6,12 @@
 #define NZ 3 // Dimensionality of measurement
 #define NA 7 // Dimensionality of augmented sigma point matrix
 
-UKF::UKF() {
+UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_) {
 
     cout << "UKF Constructor" << endl;
+    lambda = lambda_;
+    sigma_v_dot = sigma_v_dot_; 
+    sigma_psi_dot2 = sigma_psi_dot2_;
 
 }
 
@@ -18,11 +21,7 @@ UKF::~UKF() {
 
 }
 
-void UKF::Initialize() {
-
-    lambda = 3 - NX;
-    sigma_v_dot = 0.2; 
-    sigma_psi_dot2 = 0.2;
+void UKF::Initialize() {    
 
     x = VectorXd::Zero(NX);
     P = MatrixXd::Zero(NX, NX);

@@ -13,6 +13,7 @@ public:
   double lambda; // Spreading parameters for augmentation
   double sigma_v_dot; // Process noise standard deviation long. accel
   double sigma_psi_dot2; // Process noise standard deviation yaw accel 
+
   VectorXd x;
   MatrixXd P;
   VectorXd xa;
@@ -21,7 +22,7 @@ public:
   MatrixXd Pa;
   MatrixXd A;
 
-	UKF(); // Construcor
+	UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_); // Construcor
 	virtual ~UKF(); // Destructor
 	void Initialize();
   void ProcessMeasurement(double dt);
