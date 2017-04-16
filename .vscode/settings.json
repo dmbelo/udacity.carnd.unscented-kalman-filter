@@ -4,6 +4,7 @@
         "complex": "cpp",
         "ostream": "cpp",
         "sstream": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "functional": "cpp"
     }
 }

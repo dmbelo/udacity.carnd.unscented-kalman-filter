@@ -1,7 +1,9 @@
 #include "ukf.h"
+#include <math.h>
 
 // Assuming only radar measurements
 
+#define _USE_MATH_DEFINES
 #define NX 5 // Dimensionality of state vector
 #define NZ 3 // Dimensionality of measurement
 #define NA 7 // Dimensionality of augmented sigma point matrix
@@ -12,6 +14,16 @@ UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_) {
     lambda = lambda_;
     sigma_v_dot = sigma_v_dot_; 
     sigma_psi_dot2 = sigma_psi_dot2_;
+    is_initialized = false;
+    dt = 0.0;
+
+    x = VectorXd::Zero(NX);
+    P = MatrixXd::Zero(NX, NX);
+    xa = VectorXd::Zero(NA);
+    xs = VectorXd::Zero(NX);
+    xsa = MatrixXd::Zero(NA, 2 * NA + 1);
+    Pa = MatrixXd::Zero(NA, NA);
+    A = MatrixXd::Zero(NA, NA);
 
 }
 
@@ -21,22 +33,33 @@ UKF::~UKF() {
 
 }
 
-void UKF::Initialize() {    
-
-    x = VectorXd::Zero(NX);
-    P = MatrixXd::Zero(NX, NX);
-    xa = VectorXd::Zero(NA);
-    xs = VectorXd::Zero(NX, 2 * NA + 1);
-    xsa = MatrixXd::Zero(NA, 2 * NA + 1);
-    Pa = MatrixXd::Zero(NA, NA);
-    A = MatrixXd::Zero(NA, NA);
-
-}
-
 void UKF::ProcessMeasurement(MeasurementPackage measurement) {
 
+    if (is_initialized == false) {
+        // Initialize
+
+        if (measurement.sensor_type_ == MeasurementPackage::RADAR) {
+            float rho = measurement.raw_measurements_(0);
+	        float phi = measurement.raw_measurements_(1);
+            float rho_dot = measurement.raw_measurements_(2);
+            float px = rho * cos(phi);
+            float py = rho * sin(phi);
+            float v = rho_dot;
+            float psi = phi;
+            float psi_dot = 0.0;
+            x << px, py, v, psi, psi_dot;
+
+        }
+
+        previous_timestamp = measurement.timestamp_;    
+        is_initialized = true;
+        return;
+
+    }
+
     // Calculate timestep
-    // dt = ...
+    dt = (measurement.timestamp_ - previous_timestamp) / 1000000.0;
+    previous_timestamp = measurement.timestamp_;
 
     // Generate sigma 
     // xsa - augmented state sigma points [7x15] at k
@@ -44,7 +67,7 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
 
     // Predict sigma points
     // xs - state sigma points [5x15] at k+1
-    PredictSigmaPoints(0);
+    PredictSigmaPoints(dt);
 
     // Predict mean/covariance of predicted state
     // x - predicted state mean vector [5x1]
