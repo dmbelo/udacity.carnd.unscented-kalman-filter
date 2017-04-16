@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iostream>
+#include <math.h>
 #include "Eigen/Dense"
 #include "measurement_package.h"
 
@@ -18,13 +19,12 @@ public:
   long long previous_timestamp; // Last time stamp
   bool is_initialized;
 
-  VectorXd x;
-  MatrixXd P;
-  VectorXd xa;
-  VectorXd xs;
-  MatrixXd xsa;
-  MatrixXd Pa;
-  MatrixXd A;
+  VectorXd x; // State vector [NX x 1]
+  MatrixXd P; // State covariance matrix [NX x NX]
+  MatrixXd Pa; // Augmented state covariance matrix [NA x NA]
+  VectorXd xa; // Augmented vector [NX+2 x 1]
+  MatrixXd xs; // State sigma points [NX x NS]
+  MatrixXd xsa; // Augmented state sigma points [NA x NS]
 
 	UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_); // Construcor
 	virtual ~UKF(); // Destructor
@@ -35,7 +35,7 @@ public:
   void PredictMeasurement();
   void PredictMeasurementMeanAndCovariance();
   void UpdateState();
-  void CTRVProcessModel(VectorXd* x, VectorXd* nu, double dt);
+  void CTRVProcessModel(Ref<VectorXd> xp, Ref<VectorXd> x, Ref<VectorXd> nu, double dt);
   void RadarMeasurementModel();
   void LidarMeasurementModel();
 
