@@ -86,31 +86,31 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
     dt = (measurement.timestamp_ - previous_timestamp) / 1000000.0;
     previous_timestamp = measurement.timestamp_;
 
-    cout << "x_k_k" << endl;
+    cout << "***************************************************" << endl;
+    cout << "State Mean Vector" << endl;
     cout << x << endl;
-    cout << "P_k_k" << endl;
+    cout << "State Covariance Vector" << endl;
     cout << P << endl;
 
     // Generate sigma 
     // xsa - augmented state sigma points [7x15] at k
     GenerateAugmentedSigmaPoints();
+    cout << "Sigma Points" << endl;
+    cout << xsa << endl;
 
     // Predict sigma points
     // xs - state sigma points [5x15] at k+1
     PredictStateSigmaPoints(dt);
-    cout << "Sigma Points" << endl;
-    cout << xsa << endl;
-
-    cout << "Predicted Sigma Points" << endl;
+    cout << "Predicted State Sigma Points" << endl;
     cout << xs << endl;
 
     // Predict mean/covariance of predicted state
     // x - predicted state mean vector [5x1]
     // P - predicted state covariance [5x5]
     CalculateStateMeanAndCovariance();
-    cout << "x_k+1_k" << endl;
+    cout << "Predicted State Mean Vector" << endl;
     cout << x << endl;
-    cout << "P_k+1_k" << endl;
+    cout << "Predicted State Covariance Matrix" << endl;
     cout << P << endl;
 
     // Predict measurement
@@ -118,19 +118,26 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
     // Will have to deal with different measurement types here {RADAR/LIDAR}
     // zs - predicted measurement sigma points [3x15]
     PredictMeasurementSigmaPoints();
+    cout << "Predicted Measurement Sigma Points" << endl;
+    cout << zs << endl;
 
     // Predict mean/covariance of predicted measurements
     // zp - predicted measurement mean vector [3x1]
     // S - predicted measurement covariance [3x3]
     CalculateMeasurementMeanAndCovariance();
+    cout << "Predicted Measurement Mean Vector" << endl;
+    cout << zp << endl;
+    cout << "Predicted Measurement Covariance Matrix" << endl;
+    cout << S << endl;
     
     // Update state
     // z - measurement [3x1]
     // x - updated state mean vector [5x1]
     // P - updated state covariance matrix [5x5] 
     UpdateState(measurement.raw_measurements_);
-
-    cout << "P_k+1_k+1" << endl;
+    cout << "Updated State Mean Vector" << endl;
+    cout << x << endl;
+    cout << "Updated State Covariance Matrix" << endl;
     cout << P << endl << endl;
 
 }
@@ -198,7 +205,7 @@ void UKF::CalculateStateMeanAndCovariance() {
 
 void UKF::PredictMeasurementSigmaPoints() {
 
-    for (int i = 0; i < NA; i++) 
+    for (int i = 0; i < NS; i++) 
     {
         RadarMeasurementModel(zs.col(i), xsa.col(i).head(NX));
     }
@@ -332,7 +339,7 @@ void UKF::RadarMeasurementModel(Ref<VectorXd> zp, Ref<VectorXd> x) {
 
     zp(0) = rho; // rho
     zp(1) = atan2(py, px); // phi
-    if (abs(rho) > 0.0001) {
+    if (fabs(rho) > 0.0001) {
         zp(2) = (px * vx + py * vy ) / rho; // rho_dot
     }
     else {
