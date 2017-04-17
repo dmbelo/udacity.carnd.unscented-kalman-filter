@@ -33,6 +33,9 @@ public:
   MatrixXd R; // Measurement covariannce matrix [NZ x NZ]
   MatrixXd zs; // Measurement sigma points [NZ x NS]
   VectorXd weights; // Weights for mean/covariance calc during augmentation 
+  MatrixXd Tc; // Cross correlation matrix
+  MatrixXd K; // Kalman gain
+
 
   // Construcor
 	UKF(double lambda_, 
@@ -41,7 +44,7 @@ public:
       double std_radr,
       double std_radphi,
       double std_radrd);
-       
+
 	virtual ~UKF(); // Destructor
   void ProcessMeasurement(MeasurementPackage measurement);
   void GenerateAugmentedSigmaPoints();
@@ -49,10 +52,9 @@ public:
   void CalculateStateMeanAndCovariance();
   void PredictMeasurementSigmaPoints();
   void CalculateMeasurementMeanAndCovariance();
-  void UpdateState();
+  void UpdateState(VectorXd z);
   void CTRVProcessModel(Ref<VectorXd> xp, Ref<VectorXd> x, Ref<VectorXd> nu, double dt);
   void RadarMeasurementModel(Ref<VectorXd> zp, Ref<VectorXd> x);
-  void LidarMeasurementModel();
 
 };
 

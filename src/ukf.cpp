@@ -29,6 +29,8 @@ UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_,
     zs = MatrixXd::Zero(NZ, NS);
     S = MatrixXd::Zero(NZ, NZ);
     // A = MatrixXd::Zero(NA, NA);
+    Tc = MatrixXd::Zero(NX, NZ);
+    K = MatrixXd::Zero(NX, NZ);
 
     // Calculate weights
     weights = VectorXd::Zero(NS);    
@@ -76,6 +78,9 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
         return;
 
     }
+    else if (measurement.sensor_type_ == MeasurementPackage::LASER) {
+        return;
+    }
 
     // Calculate timestep
     dt = (measurement.timestamp_ - previous_timestamp) / 1000000.0;
@@ -109,7 +114,7 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
     // z - measurement [3x1]
     // x - updated state mean vector [5x1]
     // P - updated state covariance matrix [5x5] 
-    // UpdateState();
+    UpdateState(measurement.raw_measurements_);
 
 }
 
@@ -120,7 +125,7 @@ void UKF::GenerateAugmentedSigmaPoints() {
     Pa(5, 5) = sigma_v_dot * sigma_v_dot;
     Pa(6, 6) = sigma_psi_dot2 * sigma_psi_dot2;
 
-    MatrixXd A = (Pa.llt().matrixL());
+    MatrixXd A = Pa.llt().matrixL();
     A *= sqrt(lambda + NA); //square root matrix
 
     xsa.col(0) = xa;
@@ -213,7 +218,39 @@ void UKF::CalculateMeasurementMeanAndCovariance() {
 
 }
 
-void UKF::UpdateState() {
+void UKF::UpdateState(VectorXd z) {
+
+    VectorXd z_diff = VectorXd(NZ);
+    VectorXd x_diff = VectorXd(NX);
+    Tc.fill(0.0);
+    for (int i = 0; i < NS; i++) {
+
+        //residual
+        z_diff = zs.col(i) - zp;
+        //angle normalization
+        while (z_diff(1) > M_PI) z_diff(1) -= 2.*M_PI;
+        while (z_diff(1) <- M_PI) z_diff(1) += 2.*M_PI;
+
+        // state difference
+        x_diff = xs.col(i) - x;
+        //angle normalization
+        while (x_diff(3) > M_PI) x_diff(3) -= 2.*M_PI;
+        while (x_diff(3) <- M_PI) x_diff(3) += 2.*M_PI;
+
+        Tc = Tc + weights(i) * x_diff * z_diff.transpose();
+
+    }
+
+    K = Tc * S.inverse(); // Kalman gain
+    z_diff = z - zp;
+
+    //angle normalization
+    while (z_diff(1) > M_PI) z_diff(1) -= 2.0 * M_PI;
+    while (z_diff(1) <- M_PI) z_diff(1) += 2.0 * M_PI;
+
+    // Update state mean and covariance matrix
+    x += K * z_diff;
+    // P -= K * S * K.transpose(); //TODO These numbers are blowing up...
 
 }
 
@@ -277,9 +314,5 @@ void UKF::RadarMeasurementModel(Ref<VectorXd> zp, Ref<VectorXd> x) {
     zp(0) = sqrt(px * px + py * py); // rho_dot
     zp(1) = atan2(py, px); // phi
     zp(2) = (px * vx + py * vy ) / sqrt(px * px + py * py); // rho_dot
-
-}
-
-void UKF::LidarMeasurementModel() {
 
 }
