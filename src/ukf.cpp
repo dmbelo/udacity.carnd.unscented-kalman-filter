@@ -9,7 +9,8 @@
 #define NA 7 // Number of augmented states
 #define NS 15 // Number of sigma points (2 * NA + 1)
 
-UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_) {
+UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_,
+         double std_radr, double std_radphi, double std_radrd) {
 
     cout << "UKF Constructor" << endl;
     lambda = lambda_;
@@ -24,7 +25,25 @@ UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_) {
     xs = MatrixXd::Zero(NX, NS);
     xsa = MatrixXd::Zero(NA, NS);
     Pa = MatrixXd::Zero(NA, NA);
+    zp = VectorXd::Zero(NZ);
+    zs = MatrixXd::Zero(NZ, NS);
+    S = MatrixXd::Zero(NZ, NZ);
     // A = MatrixXd::Zero(NA, NA);
+
+    // Calculate weights
+    weights = VectorXd::Zero(NS);    
+    weights(0) = lambda / (lambda + NA);  
+    for (int i = 1; i < NS; i++) {
+
+        weights(i) = 0.5 / (lambda + NA);
+
+    }
+
+    // Assemble measurement covariance matrix
+    R = MatrixXd(NZ, NZ);
+    R << std_radr*std_radr, 0, 0,
+         0, std_radphi*std_radphi, 0,
+         0, 0, std_radrd*std_radrd;
 
 }
 
@@ -68,7 +87,7 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
 
     // Predict sigma points
     // xs - state sigma points [5x15] at k+1
-    PredictSigmaPoints(dt);
+    PredictStateSigmaPoints(dt);
 
     // Predict mean/covariance of predicted state
     // x - predicted state mean vector [5x1]
@@ -79,12 +98,12 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
     // Use the (predicted?) xs sigma points
     // Will have to deal with different measurement types here {RADAR/LIDAR}
     // zs - predicted measurement sigma points [3x15]
-    // PredictMeasurement();
+    PredictMeasurementSigmaPoints();
 
     // Predict mean/covariance of predicted measurements
     // zp - predicted measurement mean vector [3x1]
     // S - predicted measurement covariance [3x3]
-    // PredictMeasurementMeanAndCovariance();
+    CalculateMeasurementMeanAndCovariance();
     
     // Update state
     // z - measurement [3x1]
@@ -122,7 +141,7 @@ void UKF::GenerateAugmentedSigmaPoints() {
 
 }
 
-void UKF::PredictSigmaPoints(double dt) {
+void UKF::PredictStateSigmaPoints(double dt) {
 
     for (int i = 0; i < NA; i++) 
     {
@@ -133,16 +152,6 @@ void UKF::PredictSigmaPoints(double dt) {
 
 void UKF::CalculateStateMeanAndCovariance() {
 
-    VectorXd x_diff = VectorXd(NX);
-    VectorXd weights = VectorXd(NS);    
-    
-    for (int i = 0; i < NS; i++){
-
-        if (i==0) {weights(i) = lambda / (lambda + NA);}        
-        else {weights(i) = 0.5 / (lambda + NA);}
-
-    }
-
     x.fill(0.0); // Reset to state mean to zero
     for (int i = 0; i < NS; i++) {
 
@@ -150,25 +159,57 @@ void UKF::CalculateStateMeanAndCovariance() {
 
     }
 
+    VectorXd x_diff = VectorXd(NX);
     P.fill(0.0); // Reset state covariance to zero
     for (int i = 0; i < NS; i++) {
 
         // state difference
         x_diff = xs.col(i) - x;
         //angle normalization
-        while (x_diff(3)> M_PI) x_diff(3) -= 2.0 * M_PI;
-        while (x_diff(3)<-M_PI) x_diff(3) += 2.0 * M_PI;
+        while (x_diff(3) > M_PI) x_diff(3) -= 2.0 * M_PI;
+        while (x_diff(3) <- M_PI) x_diff(3) += 2.0 * M_PI;
         P += weights(i) * x_diff * x_diff.transpose();
 
     }
 
 }
 
-void UKF::PredictMeasurement() {
+void UKF::PredictMeasurementSigmaPoints() {
+
+    for (int i = 0; i < NA; i++) 
+    {
+        RadarMeasurementModel(zs.col(i), xsa.col(i).head(NX));
+    }
 
 }
 
-void UKF::PredictMeasurementMeanAndCovariance() {
+void UKF::CalculateMeasurementMeanAndCovariance() {
+
+    // Predicted measurement mean
+    zp.fill(0.0);
+    for (int i = 0; i < NS; i++) {
+
+        zp += weights(i) * zs.col(i);
+        
+    }
+
+    // Predicted measurement covariance
+    VectorXd z_diff = VectorXd(NZ);
+    S.fill(0.0);
+    for (int i = 0; i < NS; i++) {
+
+        z_diff = zs.col(i) - zp;
+
+        // angle normalization
+        while (z_diff(1) > M_PI) z_diff(1) -= 2.*M_PI;
+        while (z_diff(1) < -M_PI) z_diff(1) += 2.*M_PI;
+
+        S = S + weights(i) * z_diff * z_diff.transpose();
+
+    }
+
+    // Add measurement noise covariance matrix
+    S += R;
 
 }
 
@@ -223,8 +264,19 @@ void UKF::CTRVProcessModel(Ref<VectorXd> xp, Ref<VectorXd> x, Ref<VectorXd> nu, 
 
 }
 
+void UKF::RadarMeasurementModel(Ref<VectorXd> zp, Ref<VectorXd> x) {
 
-void UKF::RadarMeasurementModel() {
+    double px = x(0);
+    double py = x(1);
+    double v  = x(2);
+    double psi = x(3);
+
+    double vx = cos(psi) * v;
+    double vy = sin(psi) * v;
+
+    zp(0) = sqrt(px * px + py * py); // rho_dot
+    zp(1) = atan2(py, px); // phi
+    zp(2) = (px * vx + py * vy ) / sqrt(px * px + py * py); // rho_dot
 
 }
 
