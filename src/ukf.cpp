@@ -7,7 +7,7 @@
 #define NX 5 // Number of states
 #define NZ 3 // Number of measurements
 #define NA 7 // Number of augmented states
-#define NS 15 // Number of sigma points
+#define NS 15 // Number of sigma points (2 * NA + 1)
 
 UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_) {
 
@@ -73,7 +73,7 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
     // Predict mean/covariance of predicted state
     // x - predicted state mean vector [5x1]
     // P - predicted state covariance [5x5]
-    // PredictStateMeanAndCovariance();
+    CalculateStateMeanAndCovariance();
 
     // Predict measurement
     // Use the (predicted?) xs sigma points
@@ -131,7 +131,36 @@ void UKF::PredictSigmaPoints(double dt) {
 
 }
 
-void UKF::PredictStateMeanAndCovariance() {
+void UKF::CalculateStateMeanAndCovariance() {
+
+    VectorXd x_diff = VectorXd(NX);
+    VectorXd weights = VectorXd(NS);    
+    
+    for (int i = 0; i < NS; i++){
+
+        if (i==0) {weights(i) = lambda / (lambda + NA);}        
+        else {weights(i) = 0.5 / (lambda + NA);}
+
+    }
+
+    x.fill(0.0); // Reset to state mean to zero
+    for (int i = 0; i < NS; i++) {
+
+        x += weights(i) * xs.col(i);
+
+    }
+
+    P.fill(0.0); // Reset state covariance to zero
+    for (int i = 0; i < NS; i++) {
+
+        // state difference
+        x_diff = xs.col(i) - x;
+        //angle normalization
+        while (x_diff(3)> M_PI) x_diff(3) -= 2.0 * M_PI;
+        while (x_diff(3)<-M_PI) x_diff(3) += 2.0 * M_PI;
+        P += weights(i) * x_diff * x_diff.transpose();
+
+    }
 
 }
 

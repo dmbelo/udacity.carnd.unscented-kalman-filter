@@ -31,21 +31,13 @@ public:
   void ProcessMeasurement(MeasurementPackage measurement);
   void GenerateAugmentedSigmaPoints();
   void PredictSigmaPoints(double dt);
-  void PredictStateMeanAndCovariance();
+  void CalculateStateMeanAndCovariance();
   void PredictMeasurement();
   void PredictMeasurementMeanAndCovariance();
   void UpdateState();
   void CTRVProcessModel(Ref<VectorXd> xp, Ref<VectorXd> x, Ref<VectorXd> nu, double dt);
   void RadarMeasurementModel();
   void LidarMeasurementModel();
-
-  // void GenerateSigmaPoints(MatrixXd* Xsig_out);
-  // void AugmentedSigmaPoints(MatrixXd* Xsig_out);
-  // void SigmaPointPrediction(MatrixXd* Xsig_out);
-  // void PredictMeanAndCovariance(VectorXd* x_pred, MatrixXd* P_pred);
-  // void PredictRadarMeasurement(VectorXd* z_out, MatrixXd* S_out);
-  // void UpdateState(VectorXd* x_out, MatrixXd* P_out);
-  // void PredictionFunction(VectorXd* x, VectorXd* x_pred, double dt);
 
 };
 
