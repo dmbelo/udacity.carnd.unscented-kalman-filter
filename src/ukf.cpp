@@ -28,7 +28,6 @@ UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_,
     zp = VectorXd::Zero(NZ);
     zs = MatrixXd::Zero(NZ, NS);
     S = MatrixXd::Zero(NZ, NZ);
-    // A = MatrixXd::Zero(NA, NA);
     Tc = MatrixXd::Zero(NX, NZ);
     K = MatrixXd::Zero(NX, NZ);
 
@@ -66,10 +65,11 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
             float rho_dot = measurement.raw_measurements_(2);
             float px = rho * cos(phi);
             float py = rho * sin(phi);
-            float v = rho_dot;
-            float psi = phi;
+            float v = 0.0;
+            float psi = 0.0;
             float psi_dot = 0.0;
             x << px, py, v, psi, psi_dot;
+            P = MatrixXd::Identity(NX, NX);
 
         }
 
@@ -86,6 +86,11 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
     dt = (measurement.timestamp_ - previous_timestamp) / 1000000.0;
     previous_timestamp = measurement.timestamp_;
 
+    cout << "x_k_k" << endl;
+    cout << x << endl;
+    cout << "P_k_k" << endl;
+    cout << P << endl;
+
     // Generate sigma 
     // xsa - augmented state sigma points [7x15] at k
     GenerateAugmentedSigmaPoints();
@@ -93,11 +98,20 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
     // Predict sigma points
     // xs - state sigma points [5x15] at k+1
     PredictStateSigmaPoints(dt);
+    cout << "Sigma Points" << endl;
+    cout << xsa << endl;
+
+    cout << "Predicted Sigma Points" << endl;
+    cout << xs << endl;
 
     // Predict mean/covariance of predicted state
     // x - predicted state mean vector [5x1]
     // P - predicted state covariance [5x5]
     CalculateStateMeanAndCovariance();
+    cout << "x_k+1_k" << endl;
+    cout << x << endl;
+    cout << "P_k+1_k" << endl;
+    cout << P << endl;
 
     // Predict measurement
     // Use the (predicted?) xs sigma points
@@ -115,6 +129,9 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
     // x - updated state mean vector [5x1]
     // P - updated state covariance matrix [5x5] 
     UpdateState(measurement.raw_measurements_);
+
+    cout << "P_k+1_k+1" << endl;
+    cout << P << endl << endl;
 
 }
 
@@ -148,19 +165,19 @@ void UKF::GenerateAugmentedSigmaPoints() {
 
 void UKF::PredictStateSigmaPoints(double dt) {
 
-    for (int i = 0; i < NA; i++) 
+    for (int i = 0; i < NS; i++) 
     {
         CTRVProcessModel(xs.col(i), xsa.col(i).head(NX), xsa.col(i).tail(NA-NX), dt);
     }
 
 }
 
-void UKF::CalculateStateMeanAndCovariance() {
+void UKF::CalculateStateMeanAndCovariance() { 
 
     x.fill(0.0); // Reset to state mean to zero
     for (int i = 0; i < NS; i++) {
 
-        x += weights(i) * xs.col(i);
+        x = x + weights(i) * xs.col(i);
 
     }
 
@@ -173,7 +190,7 @@ void UKF::CalculateStateMeanAndCovariance() {
         //angle normalization
         while (x_diff(3) > M_PI) x_diff(3) -= 2.0 * M_PI;
         while (x_diff(3) <- M_PI) x_diff(3) += 2.0 * M_PI;
-        P += weights(i) * x_diff * x_diff.transpose();
+        P = P + weights(i) * x_diff * x_diff.transpose();
 
     }
 
@@ -194,7 +211,7 @@ void UKF::CalculateMeasurementMeanAndCovariance() {
     zp.fill(0.0);
     for (int i = 0; i < NS; i++) {
 
-        zp += weights(i) * zs.col(i);
+        zp = zp + weights(i) * zs.col(i);
         
     }
 
@@ -214,7 +231,7 @@ void UKF::CalculateMeasurementMeanAndCovariance() {
     }
 
     // Add measurement noise covariance matrix
-    S += R;
+    S = S + R;
 
 }
 
@@ -249,8 +266,8 @@ void UKF::UpdateState(VectorXd z) {
     while (z_diff(1) <- M_PI) z_diff(1) += 2.0 * M_PI;
 
     // Update state mean and covariance matrix
-    x += K * z_diff;
-    // P -= K * S * K.transpose(); //TODO These numbers are blowing up...
+    x = x + K * z_diff;
+    P = P - K * S * K.transpose();
 
 }
 
@@ -275,9 +292,9 @@ void UKF::CTRVProcessModel(Ref<VectorXd> xp, Ref<VectorXd> x, Ref<VectorXd> nu, 
     double cp = cos(psi);
     double dt2 = dt * dt;
 
-    if (abs(psi_dot) > 0.001) 
+    if (fabs(psi_dot) > 0.001) 
     {
-        double vpd = v/psi_dot;
+        double vpd = v / psi_dot;
         px = px + vpd * (sin(ppd) - sp) + 0.5 * dt2 * cp * nu_accel;
         py = py + vpd * (-cos(ppd) + cp) + 0.5 * dt2 * sp * nu_accel;
         v = v + dt * nu_accel;
@@ -311,8 +328,16 @@ void UKF::RadarMeasurementModel(Ref<VectorXd> zp, Ref<VectorXd> x) {
     double vx = cos(psi) * v;
     double vy = sin(psi) * v;
 
-    zp(0) = sqrt(px * px + py * py); // rho_dot
+    double rho = sqrt(px * px + py * py);
+
+    zp(0) = rho; // rho
     zp(1) = atan2(py, px); // phi
-    zp(2) = (px * vx + py * vy ) / sqrt(px * px + py * py); // rho_dot
+    if (abs(rho) > 0.0001) {
+        zp(2) = (px * vx + py * vy ) / rho; // rho_dot
+    }
+    else {
+        zp(2) = 0.0;
+    }
+    
 
 }
