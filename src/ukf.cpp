@@ -55,7 +55,7 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
         // Initialize
 
         if (measurement.sensor_type_ == MeasurementPackage::RADAR) {
-            
+
             float rho = measurement.raw_measurements_(0);
 	        float phi = measurement.raw_measurements_(1);
             float rho_dot = measurement.raw_measurements_(2);
@@ -149,20 +149,13 @@ void UKF::GenerateAugmentedSigmaPoints() {
     A *= sqrt(lambda + NA); //square root matrix
 
     xsa.col(0) = xa;
-    xsa.col(1) = xa + A.col(0);
-    xsa.col(2) = xa + A.col(1);
-    xsa.col(3) = xa + A.col(2);
-    xsa.col(4) = xa + A.col(3);
-    xsa.col(5) = xa + A.col(4);
-    xsa.col(6) = xa + A.col(5);
-    xsa.col(7) = xa + A.col(6);
-    xsa.col(8) = xa - A.col(0);
-    xsa.col(9) = xa - A.col(1);
-    xsa.col(10) = xa - A.col(2);
-    xsa.col(11) = xa - A.col(3);
-    xsa.col(12) = xa - A.col(4);
-    xsa.col(13) = xa - A.col(5);
-    xsa.col(14) = xa - A.col(6);
+
+    for (int i = 0; i < NA; i++) {
+
+        xsa.col(i + 1) = xa + A.col(i);
+        xsa.col(i + 1 + NA) = xa - A.col(i);
+
+    }
 
 }
 
