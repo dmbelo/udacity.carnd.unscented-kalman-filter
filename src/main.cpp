@@ -9,9 +9,6 @@
 #include "tools.h"
 
 using namespace std;
-// using Eigen::MatrixXd;
-// using Eigen::VectorXd;
-// using std::vector;
 
 void check_arguments(int argc, char *argv[])
 {
@@ -148,7 +145,12 @@ int main(int argc, char *argv[])
     }
 
     // Create a UKF instance
-    UKF ukf(-4.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    UKF ukf(-4.0,   // lambda
+	         0.50,  // sigma_v_dot
+			 0.50,  // sigma_psi_dot2_
+			 0.50,  // std_radr
+			 0.50,  // std_radphi
+			 0.50); // std_radrd
 
     // used to compute the RMSE later
     vector<VectorXd> estimations;

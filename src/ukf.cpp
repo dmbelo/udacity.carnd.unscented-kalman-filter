@@ -82,59 +82,59 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
     dt = (measurement.timestamp_ - previous_timestamp) / 1000000.0;
     previous_timestamp = measurement.timestamp_;
 
-    cout << "***************************************************" << endl;
-    cout << "State Mean Vector" << endl;
-    cout << x << endl;
-    cout << "State Covariance Vector" << endl;
-    cout << P << endl;
+    // cout << "***************************************************" << endl;
+    // cout << "State Mean Vector" << endl;
+    // cout << x << endl;
+    // cout << "State Covariance Vector" << endl;
+    // cout << P << endl;
 
     // Generate sigma 
     // xsa - augmented state sigma points [7x15] at k
     GenerateAugmentedSigmaPoints();
-    cout << "Sigma Points" << endl;
-    cout << xsa << endl;
+    // cout << "Sigma Points" << endl;
+    // cout << xsa << endl;
 
     // Predict sigma points
     // xs - state sigma points [5x15] at k+1
     PredictStateSigmaPoints(dt);
-    cout << "Predicted State Sigma Points" << endl;
-    cout << xs << endl;
+    // cout << "Predicted State Sigma Points" << endl;
+    // cout << xs << endl;
 
     // Predict mean/covariance of predicted state
     // x - predicted state mean vector [5x1]
     // P - predicted state covariance [5x5]
     CalculateStateMeanAndCovariance();
-    cout << "Predicted State Mean Vector" << endl;
-    cout << x << endl;
-    cout << "Predicted State Covariance Matrix" << endl;
-    cout << P << endl;
+    // cout << "Predicted State Mean Vector" << endl;
+    // cout << x << endl;
+    // cout << "Predicted State Covariance Matrix" << endl;
+    // cout << P << endl;
 
     // Predict measurement
     // Use the (predicted?) xs sigma points
     // Will have to deal with different measurement types here {RADAR/LIDAR}
     // zs - predicted measurement sigma points [3x15]
     PredictMeasurementSigmaPoints();
-    cout << "Predicted Measurement Sigma Points" << endl;
-    cout << zs << endl;
+    // cout << "Predicted Measurement Sigma Points" << endl;
+    // cout << zs << endl;
 
     // Predict mean/covariance of predicted measurements
     // zp - predicted measurement mean vector [3x1]
     // S - predicted measurement covariance [3x3]
     CalculateMeasurementMeanAndCovariance();
-    cout << "Predicted Measurement Mean Vector" << endl;
-    cout << zp << endl;
-    cout << "Predicted Measurement Covariance Matrix" << endl;
-    cout << S << endl;
+    // cout << "Predicted Measurement Mean Vector" << endl;
+    // cout << zp << endl;
+    // cout << "Predicted Measurement Covariance Matrix" << endl;
+    // cout << S << endl;
     
     // Update state
     // z - measurement [3x1]
     // x - updated state mean vector [5x1]
     // P - updated state covariance matrix [5x5] 
     UpdateState(measurement.raw_measurements_);
-    cout << "Updated State Mean Vector" << endl;
-    cout << x << endl;
-    cout << "Updated State Covariance Matrix" << endl;
-    cout << P << endl << endl;
+    // cout << "Updated State Mean Vector" << endl;
+    cout << x.transpose() << endl;
+    // cout << "Updated State Covariance Matrix" << endl;
+    // cout << P << endl << endl;
 
 }
 
