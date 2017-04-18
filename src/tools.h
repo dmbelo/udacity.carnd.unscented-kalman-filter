@@ -4,6 +4,9 @@
 #include <vector>
 #include "Eigen/Dense"
 
+using namespace std;
+using namespace Eigen;
+
 class Tools {
 public:
   /**
@@ -19,7 +22,7 @@ public:
   /**
   * A helper method to calculate RMSE.
   */
-  Eigen::VectorXd CalculateRMSE(const std::vector<Eigen::VectorXd> &estimations, const std::vector<Eigen::VectorXd> &ground_truth);
+  VectorXd CalculateRMSE(const vector<VectorXd> &estimations, const vector<VectorXd> &ground_truth);
 
 };
 

@@ -225,21 +225,20 @@ int main(int argc, char *argv[])
 	// convert ukf x vector to cartesian to compare to ground truth
 	VectorXd ukf_x_cartesian_ = VectorXd(4);
 
-	// float x_estimate_ = ukf.x_(0);
-	// float y_estimate_ = ukf.x_(1);
-	// float vx_estimate_ = ukf.x_(2) * cos(ukf.x_(3));
-	// float vy_estimate_ = ukf.x_(2) * sin(ukf.x_(3));
+	float x_estimate_ = ukf.x(0);
+	float y_estimate_ = ukf.x(1);
+	float vx_estimate_ = ukf.x(2) * cos(ukf.x(3));
+	float vy_estimate_ = ukf.x(2) * sin(ukf.x(3));
 
-	// ukf_x_cartesian_ << x_estimate_, y_estimate_, vx_estimate_, vy_estimate_;
-	ukf_x_cartesian_ << 0.0, 0.0, 0.0, 0.0;
+	ukf_x_cartesian_ << x_estimate_, y_estimate_, vx_estimate_, vy_estimate_;
 
 	estimations.push_back(ukf_x_cartesian_);
 	ground_truth.push_back(gt_pack_list[k].gt_values_);
     }
 
     // compute the accuracy (RMSE)
-    // Tools tools;
-    // cout << "Accuracy - RMSE:" << endl << tools.CalculateRMSE(estimations, ground_truth) << endl;
+    Tools tools;
+    cout << "Accuracy - RMSE:" << endl << tools.CalculateRMSE(estimations, ground_truth) << endl;
 
     // close files
     if (out_file_.is_open())
