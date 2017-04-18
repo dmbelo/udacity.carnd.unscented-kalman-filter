@@ -144,13 +144,22 @@ int main(int argc, char *argv[])
 	gt_pack_list.push_back(gt_package);
     }
 
+	// Christian's suggestions
+	// std_a = 0.2;
+	// std_yawd = 0.2;
+	// std_laspx = 0.04;
+	// std_laspy = 0.04;
+	// std_radr = 0.3;
+	// std_radphi = 0.0175;
+	// std_radrd = 0.1;
+
     // Create a UKF instance
-    UKF ukf(-4.0,   // lambda
-	         0.50,  // sigma_v_dot
-			 0.50,  // sigma_psi_dot2_
-			 0.50,  // std_radr
-			 0.50,  // std_radphi
-			 0.50); // std_radrd
+    UKF ukf(-4.0,    // lambda
+	         0.20,   // sigma_v_dot - Process noise std dev longitudinal accel [m/s2] (0.2)
+			 0.20,   // sigma_psi_dot2 - Process noise std dev yaw accel [rad/s2] (0.2)
+			 0.3,    // std_radr - Radar meas noise std dev range [m]
+			 0.0175, // std_radphi - Radar meas noise std dev angle [rad]
+			 0.1);   // std_radrd - Rader meas noise std dev range rate [m/s]
 
     // used to compute the RMSE later
     vector<VectorXd> estimations;
