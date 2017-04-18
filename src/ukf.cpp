@@ -12,7 +12,6 @@
 UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_,
          double std_radr, double std_radphi, double std_radrd) {
 
-    cout << "UKF Constructor" << endl;
     lambda = lambda_;
     sigma_v_dot = sigma_v_dot_; 
     sigma_psi_dot2 = sigma_psi_dot2_;
@@ -48,11 +47,7 @@ UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_,
 
 }
 
-UKF::~UKF() {
-
-    cout << "UKF Destructor" << endl;
-
-}
+UKF::~UKF() {}
 
 void UKF::ProcessMeasurement(MeasurementPackage measurement) {
 
@@ -60,6 +55,7 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
         // Initialize
 
         if (measurement.sensor_type_ == MeasurementPackage::RADAR) {
+            
             float rho = measurement.raw_measurements_(0);
 	        float phi = measurement.raw_measurements_(1);
             float rho_dot = measurement.raw_measurements_(2);
