@@ -145,14 +145,14 @@ int main(int argc, char *argv[])
     }
 
     // Create a UKF instance
-    UKF ukf(-5.0,  // lambda
-	         5,  // sigma_v_dot - Process noise std dev longitudinal accel [m/s2] (0.2)
-			 0.5,  // sigma_psi_dot2 - Process noise std dev yaw accel [rad/s2] (0.2)
+    UKF ukf(-4.0,  // lambda
+	         1.0,  // sigma_v_dot - Process noise std dev longitudinal accel [m/s2] (0.2)
+			 0.59, // sigma_psi_dot2 - Process noise std dev yaw accel [rad/s2] (0.2)
 			 0.15, // sigma_laspx - Laser px std dev [m]
 			 0.15, // sigma_laspy - Laser py std dev [m]
 			 0.3,  // std_radr - Radar meas noise std dev range [m]
 			 0.03, // std_radphi - Radar meas noise std dev angle [rad]
-			 0.3);  // std_radrd - Rader meas noise std dev range rate [m/s]
+			 0.3); // std_radrd - Rader meas noise std dev range rate [m/s]
 
     // used to compute the RMSE later
     vector<VectorXd> estimations;
@@ -181,6 +181,9 @@ int main(int argc, char *argv[])
     {
 	// Call the UKF-based fusion
 	ukf.ProcessMeasurement(measurement_pack_list[k]);
+
+	// output time
+	out_file_ << measurement_pack_list[k].timestamp_ << "\t";
 
 	// output the estimation
 	out_file_ << ukf.x(0) << "\t"; // pos1 - est
@@ -212,19 +215,19 @@ int main(int argc, char *argv[])
 	// output the ground truth packages
 	out_file_ << gt_pack_list[k].gt_values_(0) << "\t";
 	out_file_ << gt_pack_list[k].gt_values_(1) << "\t";
-	// out_file_ << gt_pack_list[k].gt_values_(2) << "\t";
-	// out_file_ << gt_pack_list[k].gt_values_(3) << "\t";
+	out_file_ << gt_pack_list[k].gt_values_(2) << "\t";
+	out_file_ << gt_pack_list[k].gt_values_(3) << "\t";
 
 	// output the NIS values
 
-	// if (measurement_pack_list[k].sensor_type_ == MeasurementPackage::LASER)
-	// {
-	//     out_file_ << ukf.NIS_laser_ << "\n";
-	// }
-	// else if (measurement_pack_list[k].sensor_type_ == MeasurementPackage::RADAR)
-	// {
-	//     out_file_ << ukf.NIS_radar_ << "\n";
-	// }
+	if (measurement_pack_list[k].sensor_type_ == MeasurementPackage::LASER)
+	{
+	    out_file_ << ukf.NIS_lidar << "\n";
+	}
+	else if (measurement_pack_list[k].sensor_type_ == MeasurementPackage::RADAR)
+	{
+	    out_file_ << ukf.NIS_radar << "\n";
+	}
 
 	out_file_ << "\n";
 

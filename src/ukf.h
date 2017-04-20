@@ -34,15 +34,17 @@ public:
   MatrixXd R_radar; // Measurement covariance matrix [NZ x NZ]
   MatrixXd Tc_radar; // Cross correlation matrix
   MatrixXd K_radar; // Kalman gain
+  double NIS_radar;
   VectorXd zp_lidar; // Predicted measurement mean vector [NZ x 1]
   MatrixXd zs_lidar; // Measurement sigma points [NZ x NS]
   MatrixXd S_lidar; // Predicted measurement covariance matrix [NZ x NZ]
   MatrixXd R_lidar; // Measurement covariance matrix [NZ x NZ]
   MatrixXd Tc_lidar; // Cross correlation matrix
   MatrixXd K_lidar; // Kalman gain
+  double NIS_lidar;
+  MatrixXd H_lidar;
+
   VectorXd weights; // Weights for mean/covariance calc during augmentation 
-
-
 
   // Construcor
 	UKF(double lambda_, 

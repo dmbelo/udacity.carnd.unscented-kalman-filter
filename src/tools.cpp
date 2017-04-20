@@ -22,11 +22,11 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
     
     cout << "Invalid estimation or ground_truth data" << endl;
     return rmse;
-    
+
   }
 
   // Accumulate square of residuals
-  for(unsigned int i=0; i < estimations.size(); ++i) {
+  for(int i = 0; i < estimations.size(); i++) {
 
     VectorXd residual = estimations[i] - ground_truth[i];
     residual = residual.array() * residual.array();
@@ -41,4 +41,5 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
   rmse = rmse.array().sqrt();
 
   return rmse;
+
 }

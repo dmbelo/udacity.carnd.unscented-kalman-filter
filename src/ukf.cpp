@@ -38,6 +38,7 @@ UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_,
                0,                 0,                     std_radrd*std_radrd;
     Tc_radar = MatrixXd::Zero(NX, NZ_RADAR);   
     K_radar = MatrixXd::Zero(NX, NZ_RADAR);
+    NIS_radar = 0.0;
     
     // Lidar data
     zp_lidar = VectorXd::Zero(NZ_LIDAR);
@@ -48,6 +49,10 @@ UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_,
                0,                   std_laspy*std_laspy;
     Tc_lidar = MatrixXd::Zero(NX, NZ_LIDAR);
     K_lidar = MatrixXd::Zero(NX, NZ_LIDAR);
+    NIS_lidar = 0.0;
+    H_lidar = MatrixXd(NZ_LIDAR, NX);
+    H_lidar << 1, 0, 0, 0, 0,
+               0, 1, 0, 0, 0;
 
     // Calculate weights
     weights = VectorXd::Zero(NS);    
@@ -84,11 +89,11 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
         }
 
         // P = MatrixXd::Identity(NX, NX);
-        P << 0.15, 0, 0, 0, 0,
-             0, 0.15, 0, 0, 0,
+        P << 1, 0, 0, 0, 0,
+             0, 1, 0, 0, 0,
              0, 0, 1, 0, 0, 
-             0, 0, 0, 0.01, 0,
-             0, 0, 0, 0, 0.01;
+             0, 0, 0, 0.25, 0,
+             0, 0, 0, 0, 0.5;
 
         previous_timestamp = measurement.timestamp_;    
         is_initialized = true;
@@ -324,35 +329,50 @@ void UKF::UpdateStateRadar(VectorXd z) {
     x = x + K_radar * z_diff;
     P = P - K_radar * S_radar * K_radar.transpose();
 
+    // calculate NIS
+    NIS_radar = z_diff.transpose() * S_radar.inverse() * z_diff;
+
 }
 
 void UKF::UpdateStateLidar(VectorXd z) {
 
-    VectorXd z_diff = VectorXd(NZ_LIDAR);
-    VectorXd x_diff = VectorXd(NX);
+    // VectorXd z_diff = VectorXd(NZ_LIDAR);
+    // VectorXd x_diff = VectorXd(NX);
     
-    Tc_lidar.fill(0.0);
-    for (int i = 0; i < NS; i++) {
+    // Tc_lidar.fill(0.0);
+    // for (int i = 0; i < NS; i++) {
 
-        //residual
-        z_diff = zs_lidar.col(i) - zp_lidar;
+    //     //residual
+    //     z_diff = zs_lidar.col(i) - zp_lidar;
 
-        // state difference
-        x_diff = xs.col(i) - x;
-        //angle normalization
-        while (x_diff(3) > M_PI) x_diff(3) -= 2.*M_PI;
-        while (x_diff(3) <- M_PI) x_diff(3) += 2.*M_PI;
+    //     // state difference
+    //     x_diff = xs.col(i) - x;
+    //     //angle normalization
+    //     while (x_diff(3) > M_PI) x_diff(3) -= 2.*M_PI;
+    //     while (x_diff(3) <- M_PI) x_diff(3) += 2.*M_PI;
 
-        Tc_lidar = Tc_lidar + weights(i) * x_diff * z_diff.transpose();
+    //     Tc_lidar = Tc_lidar + weights(i) * x_diff * z_diff.transpose();
 
-    }
+    // }
 
-    K_lidar = Tc_lidar * S_lidar.inverse(); // Kalman gain
-    z_diff = z - zp_lidar;
+    // K_lidar = Tc_lidar * S_lidar.inverse(); // Kalman gain
+    // z_diff = z - zp_lidar;
+
+    VectorXd z_diff(NZ_LIDAR);
+    z_diff = (z - H_lidar * x);
+    MatrixXd Ht = H_lidar.transpose();
+    S_lidar = H_lidar * P * Ht + R_lidar;
+    K_lidar = P * Ht * S_lidar.inverse();
+    MatrixXd I = MatrixXd::Identity(NX, NX);
+    x = x + K_lidar * z_diff;
+    P = (I - K_lidar * H_lidar) * P;
 
     // Update state mean and covariance matrix
-    x = x + K_lidar * z_diff;
-    P = P - K_lidar * S_lidar * K_lidar.transpose();
+    // x = x + K_lidar * z_diff;
+    // P = P - K_lidar * S_lidar * K_lidar.transpose();
+
+    // calculate NIS
+    NIS_lidar = z_diff.transpose() * S_lidar.inverse() * z_diff;
 
 }
 
@@ -422,12 +442,9 @@ void UKF::RadarMeasurementModel(Ref<VectorXd> zp, Ref<VectorXd> x) {
         zp(1) = atan2(py, px); // phi
     }
     
-    
-    if (fabs(rho) > 0.0001) {
+    zp(2) = 0.0;
+    if (fabs(rho) > 0.001) {
         zp(2) = (px * vx + py * vy ) / rho; // rho_dot
-    }
-    else {
-        zp(2) = 0.0;
     }
     
 }
