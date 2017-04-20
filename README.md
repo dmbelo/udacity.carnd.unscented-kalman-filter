@@ -15,7 +15,7 @@ build/UnscentedKF data/obj_pose-laser-radar-synthetic-input.txt build/output.txt
 # Results
 
 ```
-python build/UnscentedKF data/obj_pose-laser-radar-synthetic-input.txt build/output.txt
+python utils/report.py build/output.txt
 ```
 
 ## Position Overlay
@@ -28,5 +28,5 @@ python build/UnscentedKF data/obj_pose-laser-radar-synthetic-input.txt build/out
 ## Root Mean Square Error
 
 |X-Position|Y-Position|X-Velocity|Y-Velocity|
-|---|---|---|---|---|
+|---|---|---|---|
 |0.0800431|0.0982951|0.349081|0.242902|
