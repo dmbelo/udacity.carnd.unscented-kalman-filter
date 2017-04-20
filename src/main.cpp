@@ -245,8 +245,6 @@ int main(int argc, char *argv[])
 	ground_truth.push_back(gt_pack_list[k].gt_values_);
     }
 
-	cout << ukf.P << endl;
-
     // compute the accuracy (RMSE)
     Tools tools;
     cout << "Accuracy - RMSE:" << endl << tools.CalculateRMSE(estimations, ground_truth) << endl;
