@@ -204,7 +204,7 @@ void UKF::PredictRadarMeasurementSigmaPoints() {
 
     for (int i = 0; i < NS; i++) 
     {
-        RadarMeasurementModel(zs.col(i), xsa.col(i).head(NX));
+        RadarMeasurementModel(zs_radar.col(i), xsa.col(i).head(NX));
     }
 
 }
@@ -213,7 +213,7 @@ void UKF::PredictLidarMeasurementSigmaPoints() {
 
     for (int i = 0; i < NS; i++) 
     {
-        LidarMeasurementModel(zs.col(i), xsa.col(i).head(NX));
+        LidarMeasurementModel(zs_lidar.col(i), xsa.col(i).head(NX));
     }
 
 }
@@ -221,30 +221,30 @@ void UKF::PredictLidarMeasurementSigmaPoints() {
 void UKF::CalculateRadarMeasurementMeanAndCovariance() {
 
     // Predicted measurement mean
-    zp.fill(0.0);
+    zp_radar.fill(0.0);
     for (int i = 0; i < NS; i++) {
 
-        zp = zp + weights(i) * zs.col(i);
+        zp_radar = zp_radar + weights(i) * zs_radar.col(i);
         
     }
 
     // Predicted measurement covariance
-    VectorXd z_diff = VectorXd(NZ);
+    VectorXd z_diff = VectorXd(NZ_RADAR);
     S.fill(0.0);
     for (int i = 0; i < NS; i++) {
 
-        z_diff = zs.col(i) - zp;
+        z_diff = zs_radar.col(i) - zp_radar;
 
         // angle normalization
         while (z_diff(1) > M_PI) z_diff(1) -= 2.*M_PI;
         while (z_diff(1) < -M_PI) z_diff(1) += 2.*M_PI;
 
-        S = S + weights(i) * z_diff * z_diff.transpose();
+        S_radar = S_radar + weights(i) * z_diff * z_diff.transpose();
 
     }
 
     // Add measurement noise covariance matrix
-    S = S + R;
+    S_radar = S_radar + R_radar;
 
 }
 
@@ -263,30 +263,26 @@ void UKF::CalculateLidarMeasurementMeanAndCovariance() {
     S.fill(0.0);
     for (int i = 0; i < NS; i++) {
 
-        z_diff = zs.col(i) - zp;
-
-        // angle normalization
-        while (z_diff(1) > M_PI) z_diff(1) -= 2.*M_PI;
-        while (z_diff(1) < -M_PI) z_diff(1) += 2.*M_PI;
-
-        S = S + weights(i) * z_diff * z_diff.transpose();
+        z_diff = zs_lidar.col(i) - zp_lidar;
+        S_lidar = S_lidar + weights(i) * z_diff * z_diff.transpose();
 
     }
 
     // Add measurement noise covariance matrix
-    S = S + R;
+    S_lidar = S_lidar + R_lidar;
 
 }
 
-void UKF::UpdateState(VectorXd z) {
+void UKF::UpdateStateRadar(VectorXd z) {
 
-    VectorXd z_diff = VectorXd(NZ);
+    VectorXd z_diff = VectorXd(NZ_RADAR);
     VectorXd x_diff = VectorXd(NX);
-    Tc.fill(0.0);
+    
+    Tc_radar.fill(0.0);
     for (int i = 0; i < NS; i++) {
 
         //residual
-        z_diff = zs.col(i) - zp;
+        z_diff = zs_radar.col(i) - zp_radar;
         //angle normalization
         while (z_diff(1) > M_PI) z_diff(1) -= 2.*M_PI;
         while (z_diff(1) <- M_PI) z_diff(1) += 2.*M_PI;
@@ -297,20 +293,50 @@ void UKF::UpdateState(VectorXd z) {
         while (x_diff(3) > M_PI) x_diff(3) -= 2.*M_PI;
         while (x_diff(3) <- M_PI) x_diff(3) += 2.*M_PI;
 
-        Tc = Tc + weights(i) * x_diff * z_diff.transpose();
+        Tc_radar = Tc_radar + weights(i) * x_diff * z_diff.transpose();
 
     }
 
-    K = Tc * S.inverse(); // Kalman gain
-    z_diff = z - zp;
+    K_radar = Tc_radar * S_radar.inverse(); // Kalman gain
+    z_diff = z - zp_radar;
 
     //angle normalization
     while (z_diff(1) > M_PI) z_diff(1) -= 2.0 * M_PI;
     while (z_diff(1) <- M_PI) z_diff(1) += 2.0 * M_PI;
 
     // Update state mean and covariance matrix
-    x = x + K * z_diff;
-    P = P - K * S * K.transpose();
+    x = x + K_radar * z_diff;
+    P = P - K_radar * S_radar * K_radar.transpose();
+
+}
+
+void UKF::UpdateStateLidar(VectorXd z) {
+
+    VectorXd z_diff = VectorXd(NZ_LIDAR);
+    VectorXd x_diff = VectorXd(NX);
+    
+    Tc_lidar.fill(0.0);
+    for (int i = 0; i < NS; i++) {
+
+        //residual
+        z_diff = zs_lidar.col(i) - zp_lidar;
+
+        // state difference
+        x_diff = xs.col(i) - x;
+        //angle normalization
+        while (x_diff(3) > M_PI) x_diff(3) -= 2.*M_PI;
+        while (x_diff(3) <- M_PI) x_diff(3) += 2.*M_PI;
+
+        Tc_lidar = Tc_lidar + weights(i) * x_diff * z_diff.transpose();
+
+    }
+
+    K_lidar = Tc_lidar * S_lidar.inverse(); // Kalman gain
+    z_diff = z - zp_lidar;
+
+    // Update state mean and covariance matrix
+    x = x + K_lidar * z_diff;
+    P = P - K_lidar * S_lidar * K_lidar.transpose();
 
 }
 
