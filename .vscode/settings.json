@@ -6,6 +6,7 @@
         "sstream": "cpp",
         "vector": "cpp",
         "functional": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "iosfwd": "cpp"
     }
 }
