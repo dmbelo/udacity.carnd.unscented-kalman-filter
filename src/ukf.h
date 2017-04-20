@@ -35,11 +35,8 @@ public:
   MatrixXd Tc_radar; // Cross correlation matrix
   MatrixXd K_radar; // Kalman gain
   double NIS_radar;
-  VectorXd zp_lidar; // Predicted measurement mean vector [NZ x 1]
-  MatrixXd zs_lidar; // Measurement sigma points [NZ x NS]
   MatrixXd S_lidar; // Predicted measurement covariance matrix [NZ x NZ]
   MatrixXd R_lidar; // Measurement covariance matrix [NZ x NZ]
-  MatrixXd Tc_lidar; // Cross correlation matrix
   MatrixXd K_lidar; // Kalman gain
   double NIS_lidar;
   MatrixXd H_lidar;
@@ -62,14 +59,13 @@ public:
   void PredictStateSigmaPoints(double dt);
   void CalculateStateMeanAndCovariance();
   void PredictRadarMeasurementSigmaPoints();
-  void PredictLidarMeasurementSigmaPoints();
   void CalculateRadarMeasurementMeanAndCovariance();
-  void CalculateLidarMeasurementMeanAndCovariance();
   void UpdateStateRadar(VectorXd z);
   void UpdateStateLidar(VectorXd z);
   void CTRVProcessModel(Ref<VectorXd> xp, Ref<VectorXd> x, Ref<VectorXd> nu, double dt);
   void RadarMeasurementModel(Ref<VectorXd> zp, Ref<VectorXd> x);
   void LidarMeasurementModel(Ref<VectorXd> zp, Ref<VectorXd> x);
+  
 };
 
 #endif /* UKF_H */

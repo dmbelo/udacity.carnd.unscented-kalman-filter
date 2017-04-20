@@ -146,8 +146,8 @@ int main(int argc, char *argv[])
 
     // Create a UKF instance
     UKF ukf(-4.0,  // lambda
-	         1.0,  // sigma_v_dot - Process noise std dev longitudinal accel [m/s2] (0.2)
-			 0.59, // sigma_psi_dot2 - Process noise std dev yaw accel [rad/s2] (0.2)
+	         1.5,  // sigma_v_dot - Process noise std dev longitudinal accel [m/s2] (0.2)
+			 0.9, // sigma_psi_dot2 - Process noise std dev yaw accel [rad/s2] (0.2)
 			 0.15, // sigma_laspx - Laser px std dev [m]
 			 0.15, // sigma_laspy - Laser py std dev [m]
 			 0.3,  // std_radr - Radar meas noise std dev range [m]
