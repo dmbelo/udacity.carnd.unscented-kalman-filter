@@ -144,24 +144,15 @@ int main(int argc, char *argv[])
 	gt_pack_list.push_back(gt_package);
     }
 
-	// Christian's suggestions
-	// std_a = 0.2;
-	// std_yawd = 0.2;
-	// std_laspx = 0.04;
-	// std_laspy = 0.04;
-	// std_radr = 0.3;
-	// std_radphi = 0.0175;
-	// std_radrd = 0.1;
-
     // Create a UKF instance
-    UKF ukf(-4.0,    // lambda
-	         0.20,   // sigma_v_dot - Process noise std dev longitudinal accel [m/s2] (0.2)
-			 0.20,   // sigma_psi_dot2 - Process noise std dev yaw accel [rad/s2] (0.2)
-			 0.04,   // sigma_laspx - Laser px std dev [m]
-			 0.04,   // sigma_laspy - Laser py std dev [m]
-			 0.3,    // std_radr - Radar meas noise std dev range [m]
-			 0.0175, // std_radphi - Radar meas noise std dev angle [rad]
-			 0.1);   // std_radrd - Rader meas noise std dev range rate [m/s]
+    UKF ukf(-5.0,  // lambda
+	         5,  // sigma_v_dot - Process noise std dev longitudinal accel [m/s2] (0.2)
+			 0.5,  // sigma_psi_dot2 - Process noise std dev yaw accel [rad/s2] (0.2)
+			 0.15, // sigma_laspx - Laser px std dev [m]
+			 0.15, // sigma_laspy - Laser py std dev [m]
+			 0.3,  // std_radr - Radar meas noise std dev range [m]
+			 0.03, // std_radphi - Radar meas noise std dev angle [rad]
+			 0.3);  // std_radrd - Rader meas noise std dev range rate [m/s]
 
     // used to compute the RMSE later
     vector<VectorXd> estimations;
@@ -194,9 +185,9 @@ int main(int argc, char *argv[])
 	// output the estimation
 	out_file_ << ukf.x(0) << "\t"; // pos1 - est
 	out_file_ << ukf.x(1) << "\t"; // pos2 - est
-	// out_file_ << ukf.x(2) << "\t"; // vel_abs -est
-	// out_file_ << ukf.x(3) << "\t"; // yaw_angle -est
-	// out_file_ << ukf.x(4) << "\t"; // yaw_rate -est
+	out_file_ << ukf.x(2) << "\t"; // vel_abs -est
+	out_file_ << ukf.x(3) << "\t"; // yaw_angle -est
+	out_file_ << ukf.x(4) << "\t"; // yaw_rate -est
 
 	// output the measurements
 	if (measurement_pack_list[k].sensor_type_ == MeasurementPackage::LASER)
@@ -250,6 +241,8 @@ int main(int argc, char *argv[])
 	estimations.push_back(ukf_x_cartesian_);
 	ground_truth.push_back(gt_pack_list[k].gt_values_);
     }
+
+	cout << ukf.P << endl;
 
     // compute the accuracy (RMSE)
     Tools tools;

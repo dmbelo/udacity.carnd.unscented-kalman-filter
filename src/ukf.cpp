@@ -83,7 +83,12 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
 
         }
 
-        P = MatrixXd::Identity(NX, NX);
+        // P = MatrixXd::Identity(NX, NX);
+        P << 0.15, 0, 0, 0, 0,
+             0, 0.15, 0, 0, 0,
+             0, 0, 1, 0, 0, 
+             0, 0, 0, 0.01, 0,
+             0, 0, 0, 0, 0.01;
 
         previous_timestamp = measurement.timestamp_;    
         is_initialized = true;
@@ -150,7 +155,7 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
     }
     
     // cout << "Updated State Mean Vector" << endl;
-    cout << x.transpose() << endl;
+    // cout << x.transpose() << endl;
     // cout << "Updated State Covariance Matrix" << endl;
     // cout << P << endl << endl;
 
@@ -411,7 +416,13 @@ void UKF::RadarMeasurementModel(Ref<VectorXd> zp, Ref<VectorXd> x) {
     double rho = sqrt(px * px + py * py);
 
     zp(0) = rho; // rho
-    zp(1) = atan2(py, px); // phi
+    
+    zp(1) = 0.0;
+    if (fabs(py) > 0.001 || fabs(px) > 0.001) {
+        zp(1) = atan2(py, px); // phi
+    }
+    
+    
     if (fabs(rho) > 0.0001) {
         zp(2) = (px * vx + py * vy ) / rho; // rho_dot
     }
