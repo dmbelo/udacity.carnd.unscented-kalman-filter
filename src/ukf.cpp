@@ -26,11 +26,28 @@ UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_,
     xs = MatrixXd::Zero(NX, NS);
     xsa = MatrixXd::Zero(NA, NS);
     Pa = MatrixXd::Zero(NA, NA);
-    zp = VectorXd::Zero(NZ);
-    zs = MatrixXd::Zero(NZ, NS);
-    S = MatrixXd::Zero(NZ, NZ);
-    Tc = MatrixXd::Zero(NX, NZ);
-    K = MatrixXd::Zero(NX, NZ);
+    
+    // Radar data 
+    zp_radar = VectorXd::Zero(NZ_RADAR);
+    zs_radar = MatrixXd::Zero(NZ_RADAR, NS);
+    S_radar = MatrixXd::Zero(NZ_RADAR, NZ_RADAR); 
+    // Assemble measurement covariance matrix
+    R_radar = MatrixXd(NZ_RADAR, NZ_RADAR);
+    R_radar << std_radr*std_radr, 0,                     0,
+               0,                 std_radphi*std_radphi, 0,
+               0,                 0,                     std_radrd*std_radrd;
+    Tc_radar = MatrixXd::Zero(NX, NZ_RADAR);   
+    K_radar = MatrixXd::Zero(NX, NZ_RADAR);
+    
+    // Lidar data
+    zp_lidar = VectorXd::Zero(NZ_LIDAR);
+    zs_lidar = MatrixXd::Zero(NZ_LIDAR, NS);
+    S_lidar = MatrixXd::Zero(NZ_LIDAR, NZ_LIDAR);
+    R_lidar = MatrixXd(NZ_LIDAR, NZ_LIDAR);
+    R_lidar << std_laspx*std_laspx, 0,
+               0,                   std_laspy*std_laspy;
+    Tc_lidar = MatrixXd::Zero(NX, NZ_LIDAR);
+    K_lidar = MatrixXd::Zero(NX, NZ_LIDAR);
 
     // Calculate weights
     weights = VectorXd::Zero(NS);    
@@ -40,12 +57,6 @@ UKF::UKF(double lambda_, double sigma_v_dot_, double sigma_psi_dot2_,
         weights(i) = 0.5 / (lambda + NA);
 
     }
-
-    // Assemble measurement covariance matrix
-    R_radar = MatrixXd(NZ, NZ);
-    R_radar << std_radr*std_radr, 0, 0,
-         0, std_radphi*std_radphi, 0,
-         0, 0, std_radrd*std_radrd;
 
 }
 
@@ -63,21 +74,21 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
             float rho_dot = measurement.raw_measurements_(2);
             float px = rho * cos(phi);
             float py = rho * sin(phi);
-            float v = 0.0;
-            float psi = 0.0;
-            float psi_dot = 0.0;
-            x << px, py, v, psi, psi_dot;
-            P = MatrixXd::Identity(NX, NX);
+            x << px, py, 0.0, 0.0, 0.0;
 
         }
+        else if (measurement.sensor_type_ == MeasurementPackage::LASER) {
+
+            x << measurement.raw_measurements_, 0.0, 0.0, 0.0;
+
+        }
+
+        P = MatrixXd::Identity(NX, NX);
 
         previous_timestamp = measurement.timestamp_;    
         is_initialized = true;
         return;
 
-    }
-    else if (measurement.sensor_type_ == MeasurementPackage::LASER) {
-        return;
     }
 
     // Calculate timestep
@@ -112,7 +123,7 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
     // cout << P << endl;
 
     
-    if (sensor_type == MeasurementPackage::RADAR) {
+    if (measurement.sensor_type_ == MeasurementPackage::RADAR) {
 
         // Predict measurement
         // Use the (predicted?) xs sigma points
@@ -127,14 +138,14 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement) {
         // z - measurement [3x1]
         // x - updated state mean vector [5x1]
         // P - updated state covariance matrix [5x5] 
-        UpdateStateRadar();
+        UpdateStateRadar(measurement.raw_measurements_);
 
     }
-    else if (sensor_type == MeasurementPackage::LASER) {
+    else if (measurement.sensor_type_ == MeasurementPackage::LASER) {
 
         PredictLidarMeasurementSigmaPoints();
-        CalculateRadarMeasurementMeanAndCovariance();
-        UpdateStateLidar();
+        CalculateLidarMeasurementMeanAndCovariance();
+        UpdateStateLidar(measurement.raw_measurements_);
 
     }
     
@@ -230,7 +241,7 @@ void UKF::CalculateRadarMeasurementMeanAndCovariance() {
 
     // Predicted measurement covariance
     VectorXd z_diff = VectorXd(NZ_RADAR);
-    S.fill(0.0);
+    S_radar.fill(0.0);
     for (int i = 0; i < NS; i++) {
 
         z_diff = zs_radar.col(i) - zp_radar;
@@ -260,7 +271,7 @@ void UKF::CalculateLidarMeasurementMeanAndCovariance() {
 
     // Predicted measurement covariance
     VectorXd z_diff = VectorXd(NZ_LIDAR);
-    S.fill(0.0);
+    S_lidar.fill(0.0);
     for (int i = 0; i < NS; i++) {
 
         z_diff = zs_lidar.col(i) - zp_lidar;

@@ -28,13 +28,20 @@ public:
   VectorXd xa; // Augmented vector [NX+2 x 1]
   MatrixXd xs; // State sigma points [NX x NS]
   MatrixXd xsa; // Augmented state sigma points [NA x NS]
-  VectorXd zp; // Predicted measurement mean vector [NZ x 1]
-  MatrixXd S; // Predicted measurement covariance matrix [NZ x NZ]
-  MatrixXd R; // Measurement covariance matrix [NZ x NZ]
-  MatrixXd zs; // Measurement sigma points [NZ x NS]
+  VectorXd zp_radar; // Predicted measurement mean vector [NZ x 1]
+  MatrixXd zs_radar; // Measurement sigma points [NZ x NS]
+  MatrixXd S_radar; // Predicted measurement covariance matrix [NZ x NZ]
+  MatrixXd R_radar; // Measurement covariance matrix [NZ x NZ]
+  MatrixXd Tc_radar; // Cross correlation matrix
+  MatrixXd K_radar; // Kalman gain
+  VectorXd zp_lidar; // Predicted measurement mean vector [NZ x 1]
+  MatrixXd zs_lidar; // Measurement sigma points [NZ x NS]
+  MatrixXd S_lidar; // Predicted measurement covariance matrix [NZ x NZ]
+  MatrixXd R_lidar; // Measurement covariance matrix [NZ x NZ]
+  MatrixXd Tc_lidar; // Cross correlation matrix
+  MatrixXd K_lidar; // Kalman gain
   VectorXd weights; // Weights for mean/covariance calc during augmentation 
-  MatrixXd Tc; // Cross correlation matrix
-  MatrixXd K; // Kalman gain
+
 
 
   // Construcor
