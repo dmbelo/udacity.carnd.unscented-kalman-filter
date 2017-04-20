@@ -157,6 +157,8 @@ int main(int argc, char *argv[])
     UKF ukf(-4.0,    // lambda
 	         0.20,   // sigma_v_dot - Process noise std dev longitudinal accel [m/s2] (0.2)
 			 0.20,   // sigma_psi_dot2 - Process noise std dev yaw accel [rad/s2] (0.2)
+			 0.04,   // sigma_laspx - Laser px std dev [m]
+			 0.04,   // sigma_laspy - Laser py std dev [m]
 			 0.3,    // std_radr - Radar meas noise std dev range [m]
 			 0.0175, // std_radphi - Radar meas noise std dev angle [rad]
 			 0.1);   // std_radrd - Rader meas noise std dev range rate [m/s]
